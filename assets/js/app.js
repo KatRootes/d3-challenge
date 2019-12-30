@@ -28,11 +28,13 @@ var chartGroup = svg.append("g")
   .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
 // Initial Params & constants
-const xNames = ["smokes", "income", "age", "poverty"];
+const xNames = ["income", "age", "poverty"];
+const xAxisText = ["Household Income (Median)", "Age (Median)", "In Poverty (%)"];
 const yNames = ["healthcare", "obesity", "smokes"];
+const yAxisText = ["Lacks Healthcare (%)", "Obese (%)", "Smokes (%)"];
 var xLabels = [xNames.length];
-var yLabels = [];
-var chosenXAxis = "smokes";
+var yLabels = [yNames.length];
+var chosenXAxis = "age";
 var chosenYAxis = "obesity";
 
 // function used for updating x-scale var upon click on axis label
@@ -102,7 +104,7 @@ function renderCircles(circlesGroup, newXScale, newYScale, chosenXAxis, chosenYA
 function updateToolTip(chosenXAxis, chosenYAxis, circlesGroup) 
 {
     var toolTip = d3.tip()
-      .attr("class", "tooltip")
+      .attr("class", "tooltip d3-tip")
       .offset([80, -60])
       .html(function(d) {
         return (`${d.state}<br>${chosenXAxis} ${d[chosenXAxis]}<br>${chosenYAxis} ${d[chosenYAxis]}`);
@@ -128,16 +130,17 @@ function createXAxisLabels(labels, names)
   let i = 0;
 
   console.log(`createXAxisLabels names: ${names}`);
-  names.forEach(name => {
+  names.forEach(name => 
+  {
     console.log(name);
     xLabels[i] = labels.append("text")
     .attr("x", x)
     .attr("y", y)
     .attr("value", name) // value to grab for event listener
     .classed("axis-text", true)
-    .classed(y === 20 ? "active" : "incactive", true)
-    .classed(y === 20 ? "inactive" : "active", false)
-    .text(name);
+    .classed(name === chosenXAxis ? "active" : "incactive", true)
+    .classed(name === chosenXAxis ? "inactive" : "active", false)
+    .text(xAxisText[i]);
     y += 20;
     i += 1;
   });
@@ -149,26 +152,28 @@ function createYAxisLabels(labels, names)
 {
   let x = 0;
   let y = 0;
+  let i = 0;
 
   console.log(`createYAxisLabels names: ${names}`);
-  console.log(`xLabels = ${xLabels}`);
+  console.log(`yLabels = ${yLabels}`);
   names.forEach(name => 
   {
     console.log(name);
-    chartGroup.append("text")
+    yLabels[i] = labels.append("text")
     .attr("transform", "rotate(-90)")
     .attr("y", y - margin.left)
     .attr("x", 0 - (height / 2))
     .attr("dy", "1em")
     .classed("axis-text", true)
-    .classed(y === 20 ? "active" : "incactive", true)
-    .classed(y === 20 ? "inactive" : "active", false)
+    .classed(name === chosenYAxis ? "active" : "incactive", true)
+    .classed(name === chosenYAxis ? "inactive" : "active", false)
     .attr("value",name)
-    .text(name);
+    .text(yAxisText[i]);
 
     y += 20;
+    i += 1;
   });
-  console.log(labels);
+  console.log(yLabels);
   return labels;
 }
 
@@ -193,7 +198,7 @@ function updateYLabels(group, chosenYAxis)
 {
   group.forEach(name =>
   {
-    if (chosenYAxis === name.text)
+    if (chosenYAxis === name.attr("value"))
       name.classed("active", true).classed("inactive", false);
     else
       name.classed("active", false).classed("inactive", true);
@@ -211,12 +216,14 @@ d3.csv("/assets/data/data.csv").then(function(researchData, err) {
       data.povertyMoe = +data.povertyMoe;
       data.age = +data.age;
       data.ageMoe = +data.ageMoe;
-      data.income = +data.incomeMoe;
+      data.income = +data.income;
+      data.incomeMoe = +data.incomeMoe;
       data.healthcare = +data.healthcare;
       data.healthcareLow = +data.healthcareLow;
       data.healthcareHigh = +data.healthcareHigh;
       data.obesity = +data.obesity;
-      data.obesityLow = +data.obesityHigh;
+      data.obesityLow = +data.obesityLow;
+      data.obesityHigh = +data.obesityHigh;
       data.smokes = +data.smokes;
       data.smokesLow = +data.smokesLow;
       data.smokesHigh = +data.smokesHigh;
@@ -241,7 +248,8 @@ d3.csv("/assets/data/data.csv").then(function(researchData, err) {
       .call(bottomAxis);
 
     // append y axis
-    chartGroup.append("g")
+    var yAxis = chartGroup.append("g")
+      .classed("y-axis", true)
       .call(leftAxis);
   
     // append initial circles
@@ -252,16 +260,29 @@ d3.csv("/assets/data/data.csv").then(function(researchData, err) {
       .attr("cx", d => xLinearScale(d[chosenXAxis]))
       .attr("cy", d => yLinearScale(d[chosenYAxis]))
       .attr("r", 20)
-      .attr("fill", "blue")
-      .attr("opacity", ".5");
-  
+      // .attr("fill", "blue")
+      // .attr("opacity", ".5")
+      .classed("stateCircle", true);
+
+    var textGroup = chartGroup.selectAll("text")
+      .data(researchData)
+      .enter()
+      .append("text");
+    
+    var textLabels = textGroup
+      .attr("x", d => xLinearScale(d[chosenXAxis]) -10)
+      .attr("y", d => yLinearScale(d[chosenYAxis]))
+      .classed("stateText", true)
+      .text(d => d.abbr);
+
+
     //Create group for x- axis labels
     var labelsGroupX = chartGroup.append("g")
       .attr("transform", `translate(${width / 2}, ${height + 20})`);
   
     // Create group for y-axis labels
     var labelsGroupY = chartGroup.append("g")
-      .attr("transform", `translate(${-20}, ${height / 2})`);
+      .attr("transform", `translate(${0}, ${height / 8})`);
 
     // append x axis
     labelsGroupX = createXAxisLabels(labelsGroupX, xNames);
@@ -334,7 +355,7 @@ d3.csv("/assets/data/data.csv").then(function(researchData, err) {
         circlesGroup = updateToolTip(chosenXAxis, chosenYAxis, circlesGroup);
 
         // changes classes to change bold text
-        labelsGroupY = updateYLabels(labelsGroupY, chosenYAxis);
+        labelsGroupY = updateYLabels(yLabels, chosenYAxis);
       }
     });
   }).catch(function(error) {
