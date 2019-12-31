@@ -89,13 +89,19 @@ function renderAxesY(newYScale, yAxis)
 
 // function used for updating circles group with a transition to
 // new circles
-function renderCircles(circlesGroup, newXScale, newYScale, chosenXAxis, chosenYAxis) 
+function renderCircles(circlesGroup, textGroup, newXScale, newYScale, chosenXAxis, chosenYAxis) 
 {
   circlesGroup.transition()
     .duration(1000)
     .attr("cx", d => newXScale(d[chosenXAxis]))
     .duration(1000)
     .attr("cy", d => newYScale(d[chosenYAxis]));
+
+  textGroup.transition()
+    .duration(1000)
+    .attr("x", d => newXScale(d[chosenXAxis]))
+    .duration(1000)
+    .attr("y", d => newYScale(d[chosenYAxis])+5);
 
   return circlesGroup;
 }
@@ -134,8 +140,9 @@ function createXAxisLabels(labels, names)
   {
     console.log(name);
     xLabels[i] = labels.append("text")
-    .attr("x", x)
+    // .attr("x", x)
     .attr("y", y)
+    .attr("text-anchor", "middle")
     .attr("value", name) // value to grab for event listener
     .classed("axis-text", true)
     .classed(name === chosenXAxis ? "active" : "incactive", true)
@@ -163,6 +170,7 @@ function createYAxisLabels(labels, names)
     .attr("transform", "rotate(-90)")
     .attr("y", y - margin.left)
     .attr("x", 0 - (height / 2))
+    .attr("text-anchor", "middle")
     .attr("dy", "1em")
     .classed("axis-text", true)
     .classed(name === chosenYAxis ? "active" : "incactive", true)
@@ -252,6 +260,7 @@ d3.csv("/assets/data/data.csv").then(function(researchData, err) {
       .classed("y-axis", true)
       .call(leftAxis);
   
+    console.log(`researchData.length = ${researchData.length}`);
     // append initial circles
     var circlesGroup = chartGroup.selectAll("circle")
       .data(researchData)
@@ -264,17 +273,17 @@ d3.csv("/assets/data/data.csv").then(function(researchData, err) {
       // .attr("opacity", ".5")
       .classed("stateCircle", true);
 
-    var textGroup = chartGroup.selectAll("text")
+      console.log(`researchData.length = ${researchData.length}`);
+      var textGroup = chartGroup.selectAll("text")
       .data(researchData)
       .enter()
-      .append("text");
-    
-    var textLabels = textGroup
-      .attr("x", d => xLinearScale(d[chosenXAxis]) -10)
-      .attr("y", d => yLinearScale(d[chosenYAxis]))
+      .append("text")
+      .attr("x", d => xLinearScale(d[chosenXAxis]))
+      .attr("y", d => yLinearScale(d[chosenYAxis])+5)
       .classed("stateText", true)
       .text(d => d.abbr);
 
+      console.log(`researchData.length = ${researchData.length}`);
 
     //Create group for x- axis labels
     var labelsGroupX = chartGroup.append("g")
@@ -314,7 +323,7 @@ d3.csv("/assets/data/data.csv").then(function(researchData, err) {
         xAxis = renderAxesX(xLinearScale, xAxis);
 
         // updates circles with new x values
-        circlesGroup = renderCircles(circlesGroup, xLinearScale, yLinearScale, chosenXAxis, chosenYAxis);
+        circlesGroup = renderCircles(circlesGroup, textGroup, xLinearScale, yLinearScale, chosenXAxis, chosenYAxis);
 
 
         // updates tooltips with new info
@@ -349,7 +358,7 @@ d3.csv("/assets/data/data.csv").then(function(researchData, err) {
         yAxis = renderAxesY(yLinearScale, yAxis);
 
         // updates circles with new y values
-        circlesGroup = renderCircles(circlesGroup, xLinearScale, yLinearScale, chosenXAxis, chosenYAxis);
+        circlesGroup = renderCircles(circlesGroup, textGroup, xLinearScale, yLinearScale, chosenXAxis, chosenYAxis);
 
         // updates tooltips with new info
         circlesGroup = updateToolTip(chosenXAxis, chosenYAxis, circlesGroup);
