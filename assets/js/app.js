@@ -110,7 +110,7 @@ function renderCircles(circlesGroup, textGroup, newXScale, newYScale, chosenXAxi
 function updateToolTip(chosenXAxis, chosenYAxis, circlesGroup) 
 {
     var toolTip = d3.tip()
-      .attr("class", "tooltip d3-tip")
+      .attr("class", "d3-tip")
       .offset([80, -60])
       .html(function(d) {
         return (`${d.state}<br>${chosenXAxis} ${d[chosenXAxis]}<br>${chosenYAxis} ${d[chosenYAxis]}`);
@@ -220,6 +220,9 @@ d3.csv("/assets/data/data.csv").then(function(researchData, err) {
   
     // parse data and convert some fields to numeric
     researchData.forEach(function(data) {
+      data.abbr = data.abbr;
+      data.id = +data.id;
+      data.state = data.state;
       data.poverty = +data.poverty;
       data.povertyMoe = +data.povertyMoe;
       data.age = +data.age;
@@ -236,6 +239,9 @@ d3.csv("/assets/data/data.csv").then(function(researchData, err) {
       data.smokesLow = +data.smokesLow;
       data.smokesHigh = +data.smokesHigh;
     });
+
+    for(let z=0; z<researchData.length; z++)
+      console.log(researchData[z].abbr);
 
     console.log(researchData);
   
@@ -269,9 +275,10 @@ d3.csv("/assets/data/data.csv").then(function(researchData, err) {
       .attr("cx", d => xLinearScale(d[chosenXAxis]))
       .attr("cy", d => yLinearScale(d[chosenYAxis]))
       .attr("r", 20)
-      // .attr("fill", "blue")
-      // .attr("opacity", ".5")
       .classed("stateCircle", true);
+
+      for(let z=0; z<researchData.length; z++)
+        console.log(`x = ${researchData[z].age} y = ${researchData[z].obesity} text = ${researchData[z].abbr}`);
 
       console.log(`researchData.length = ${researchData.length}`);
       var textGroup = chartGroup.selectAll("text")
@@ -280,10 +287,15 @@ d3.csv("/assets/data/data.csv").then(function(researchData, err) {
       .append("text")
       .attr("x", d => xLinearScale(d[chosenXAxis]))
       .attr("y", d => yLinearScale(d[chosenYAxis])+5)
-      .classed("stateText", true)
-      .text(d => d.abbr);
+      .text(d => d.abbr)
+      .classed("stateText", true);
 
+      console.log(textGroup);
       console.log(`researchData.length = ${researchData.length}`);
+
+      for(let z=0; z<researchData.length; z++)
+        console.log(`x = ${researchData[z].age} y = ${researchData[z].obesity} text = ${researchData[z].abbr}`);
+
 
     //Create group for x- axis labels
     var labelsGroupX = chartGroup.append("g")
