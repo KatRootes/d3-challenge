@@ -34,16 +34,16 @@ const yNames = ["healthcare", "obesity", "smokes"];
 const yAxisText = ["Lacks Healthcare (%)", "Obese (%)", "Smokes (%)"];
 var xLabels = [xNames.length];
 var yLabels = [yNames.length];
-var chosenXAxis = "age";
-var chosenYAxis = "obesity";
+var chosenXAxis = "poverty";
+var chosenYAxis = "healthcare";
 
 // function used for updating x-scale var upon click on axis label
 function xScale(researchData, chosenXAxis)
 {
     // create scales
     var xLinearScale = d3.scaleLinear()
-      .domain([d3.min(researchData, d => d[chosenXAxis]) * 0.9,
-        d3.max(researchData, d => d[chosenXAxis]) * 1.1
+      .domain([d3.min(researchData, d => d[chosenXAxis]) * 0.8,
+        d3.max(researchData, d => d[chosenXAxis]) * 1.2
       ])
       .range([0, width]);
   
@@ -55,8 +55,8 @@ function yScale(researchData, chosenYAxis)
 {
     // create scales
     var yLinearScale = d3.scaleLinear()
-      .domain([d3.min(researchData, d => d[chosenYAxis]) * 0.9,
-        d3.max(researchData, d => d[chosenYAxis]) * 1.1
+      .domain([d3.min(researchData, d => d[chosenYAxis]) * 0.8,
+        d3.max(researchData, d => d[chosenYAxis]) * 1.2
       ])
       .range([height, 0]);
   
@@ -240,10 +240,10 @@ d3.csv("/assets/data/data.csv").then(function(researchData, err) {
       data.smokesHigh = +data.smokesHigh;
     });
 
-    for(let z=0; z<researchData.length; z++)
-      console.log(researchData[z].abbr);
+    // for(let z=0; z<researchData.length; z++)
+      // console.log(researchData[z].abbr);
 
-    console.log(researchData);
+    // console.log(researchData);
   
     // xLinearScale function above csv import
     var xLinearScale = xScale(researchData, chosenXAxis);
@@ -266,7 +266,7 @@ d3.csv("/assets/data/data.csv").then(function(researchData, err) {
       .classed("y-axis", true)
       .call(leftAxis);
   
-    console.log(`researchData.length = ${researchData.length}`);
+    // console.log(`researchData.length = ${researchData.length}`);
     // append initial circles
     var circlesGroup = chartGroup.selectAll("circle")
       .data(researchData)
@@ -274,28 +274,36 @@ d3.csv("/assets/data/data.csv").then(function(researchData, err) {
       .append("circle")
       .attr("cx", d => xLinearScale(d[chosenXAxis]))
       .attr("cy", d => yLinearScale(d[chosenYAxis]))
-      .attr("r", 20)
+      .attr("r", 10)
       .classed("stateCircle", true);
 
-      for(let z=0; z<researchData.length; z++)
-        console.log(`x = ${researchData[z].age} y = ${researchData[z].obesity} text = ${researchData[z].abbr}`);
+      // for(let z=0; z<researchData.length; z++)
+        // console.log(`x = ${researchData[z].age} y = ${researchData[z].obesity} text = ${researchData[z].abbr}`);
 
-      console.log(`researchData.length = ${researchData.length}`);
-      var textGroup = chartGroup.selectAll("text")
+      // console.log(`researchData.length = ${researchData.length}`);
+    var textGroup = chartGroup.selectAll("p")
       .data(researchData)
       .enter()
       .append("text")
-      .attr("x", d => xLinearScale(d[chosenXAxis]))
-      .attr("y", d => yLinearScale(d[chosenYAxis])+5)
       .text(d => d.abbr)
+      .attr("x", d => xLinearScale(d[chosenXAxis]))
+      .attr("y", d => yLinearScale(d[chosenYAxis])+2.5)
       .classed("stateText", true);
 
-      console.log(textGroup);
-      console.log(`researchData.length = ${researchData.length}`);
+       console.log(textGroup);
+      //  console.log(textGroup2);
+      // console.log(`researchData.length = ${researchData.length}`);
 
+      let minX = 1000, maxX = -1, minY = 1000, maxY = -1;
       for(let z=0; z<researchData.length; z++)
-        console.log(`x = ${researchData[z].age} y = ${researchData[z].obesity} text = ${researchData[z].abbr}`);
-
+      {
+        console.log(`x = ${researchData[z][chosenXAxis]} y = ${researchData[z][chosenYAxis]} text = ${researchData[z].abbr}`);
+        minX = minX < researchData[z][chosenXAxis] ? minX : researchData[z][chosenXAxis];
+        minY = minY < researchData[z][chosenYAxis] ? minY : researchData[z][chosenYAxis];
+        maxX = maxX > researchData[z][chosenXAxis] ? maxX : researchData[z][chosenXAxis];
+        maxY = maxY > researchData[z][chosenYAxis] ? maxY : researchData[z][chosenYAxis];
+      }
+      console.log(`minX ${minX} minY ${minY} maxX ${maxX} maxY ${maxY}`);
 
     //Create group for x- axis labels
     var labelsGroupX = chartGroup.append("g")
