@@ -109,31 +109,48 @@ function renderCircles(circlesGroup, textGroup, newXScale, newYScale, chosenXAxi
  // function used for updating circles group with new tooltip
 function updateToolTip(chosenXAxis, chosenYAxis, circlesGroup, textGroup) 
 {
-    var toolTip = d3.tip()
-      .attr("class", "d3-tip")
-      .offset([80, -60])
-      .html(function(d) {
-        return (`${d.state}<br>${chosenXAxis} ${d[chosenXAxis]}<br>${chosenYAxis} ${d[chosenYAxis]}`);
-      });
-  
-    circlesGroup.call(toolTip);
-    textGroup.call(toolTip);
-  
-    circlesGroup.on("mouseover", function(data) {
-      toolTip.show(data);
-    })
-    // onmouseout event
-    .on("mouseout", function(data, index) {
-      toolTip.hide(data);
+  let xLabel = "", ylabel = "";
+  switch (chosenXAxis)
+  {
+    case("income"): xLabel = `Median Income:  $`; break;
+    case("age"):    xLabel = `Median Age (years):  `; break;
+    case("poverty"): xLabel = `In Poverty (%):  `; break;
+    default: xLabel = 'Error'; break;
+  }
+
+  switch (chosenYAxis)
+  {
+    case("healthcare"): yLabel = `Lacking Healthcare (%):  `; break;
+    case("obesity"):    yLabel = `Obese (%):  `; break;
+    case("smokes"): yLabel = `Smokes (%):  `; break;
+    default: yLabel = 'Error'; break;
+  }
+
+  var toolTip = d3.tip()
+    .attr("class", "d3-tip")
+    .offset([80, -60])
+    .html(function(d) {
+      return (`${d.state}<br>${xLabel} ${d[chosenXAxis]}<br>${yLabel} ${d[chosenYAxis]}`);
     });
 
-    textGroup.on("mouseover", function(data) {
-      toolTip.show(data);
-    })
-    // onmouseout event
-    .on("mouseout", function(data, index) {
-      toolTip.hide(data);
-    });
+  circlesGroup.call(toolTip);
+  textGroup.call(toolTip);
+
+  circlesGroup.on("mouseover", function(data) {
+    toolTip.show(data);
+  })
+  // onmouseout event
+  .on("mouseout", function(data, index) {
+    toolTip.hide(data);
+  });
+
+  textGroup.on("mouseover", function(data) {
+    toolTip.show(data);
+  })
+  // onmouseout event
+  .on("mouseout", function(data, index) {
+    toolTip.hide(data);
+  });
 
   return circlesGroup;
 }
@@ -144,10 +161,8 @@ function createXAxisLabels(labels, names)
   let y = 20;
   let i = 0;
 
-  console.log(`createXAxisLabels names: ${names}`);
   names.forEach(name => 
   {
-    console.log(name);
     xLabels[i] = labels.append("text")
     .attr("y", y)
     .attr("text-anchor", "middle")
@@ -157,7 +172,6 @@ function createXAxisLabels(labels, names)
     y += 20;
     i += 1;
   });
-  console.log(xLabels);
   return labels;
 }
 
@@ -167,11 +181,8 @@ function createYAxisLabels(labels, names)
   let y = 0;
   let i = 0;
 
-  console.log(`createYAxisLabels names: ${names}`);
-  console.log(`yLabels = ${yLabels}`);
   names.forEach(name => 
   {
-    console.log(name);
     yLabels[i] = labels.append("text")
     .attr("transform", "rotate(-90)")
     .attr("y", y - margin.left)
@@ -185,18 +196,14 @@ function createYAxisLabels(labels, names)
     y += 20;
     i += 1;
   });
-  console.log(yLabels);
   return labels;
 }
 
 // Funcion to update the X axis labels
 function updateXLabels(group, chosenXAxis)
 {
-  console.log(group);
-  console.log(`chosenXAxis = ${chosenXAxis}`);
   group = group.forEach(name =>
   {
-    console.log(`name = ${name.attr("value")}`);
     if (chosenXAxis === name.attr("value"))
       name.classed("active", true).classed("inactive", false);
     else
@@ -223,32 +230,8 @@ d3.csv("/assets/data/data.csv").then(function(researchData, err) {
     if (err) throw err;
   
     // parse data and convert some fields to numeric
-    researchData.forEach(function(data) {
-      data.abbr = data.abbr;
-      data.id = +data.id;
-      data.state = data.state;
-      data.poverty = +data.poverty;
-      data.povertyMoe = +data.povertyMoe;
-      data.age = +data.age;
-      data.ageMoe = +data.ageMoe;
-      data.income = +data.income;
-      data.incomeMoe = +data.incomeMoe;
-      data.healthcare = +data.healthcare;
-      data.healthcareLow = +data.healthcareLow;
-      data.healthcareHigh = +data.healthcareHigh;
-      data.obesity = +data.obesity;
-      data.obesityLow = +data.obesityLow;
-      data.obesityHigh = +data.obesityHigh;
-      data.smokes = +data.smokes;
-      data.smokesLow = +data.smokesLow;
-      data.smokesHigh = +data.smokesHigh;
-    });
+    parseAndCastCSV(researchData);
 
-    // for(let z=0; z<researchData.length; z++)
-      // console.log(researchData[z].abbr);
-
-    // console.log(researchData);
-  
     // xLinearScale function above csv import
     var xLinearScale = xScale(researchData, chosenXAxis);
   
@@ -270,44 +253,8 @@ d3.csv("/assets/data/data.csv").then(function(researchData, err) {
       .classed("y-axis", true)
       .call(leftAxis);
   
-    // console.log(`researchData.length = ${researchData.length}`);
     // append initial circles
-    var circlesGroup = chartGroup.selectAll("circle")
-      .data(researchData)
-      .enter()
-      .append("circle")
-      .attr("cx", d => xLinearScale(d[chosenXAxis]))
-      .attr("cy", d => yLinearScale(d[chosenYAxis]))
-      .attr("r", 10)
-      .classed("stateCircle", true);
-
-      // for(let z=0; z<researchData.length; z++)
-        // console.log(`x = ${researchData[z].age} y = ${researchData[z].obesity} text = ${researchData[z].abbr}`);
-
-      // console.log(`researchData.length = ${researchData.length}`);
-    var textGroup = chartGroup.selectAll("p")
-      .data(researchData)
-      .enter()
-      .append("text")
-      .text(d => d.abbr)
-      .attr("x", d => xLinearScale(d[chosenXAxis]))
-      .attr("y", d => yLinearScale(d[chosenYAxis])+2.5)
-      .classed("stateText", true);
-
-       console.log(textGroup);
-      //  console.log(textGroup2);
-      // console.log(`researchData.length = ${researchData.length}`);
-
-      let minX = 1000, maxX = -1, minY = 1000, maxY = -1;
-      for(let z=0; z<researchData.length; z++)
-      {
-        console.log(`x = ${researchData[z][chosenXAxis]} y = ${researchData[z][chosenYAxis]} text = ${researchData[z].abbr}`);
-        minX = minX < researchData[z][chosenXAxis] ? minX : researchData[z][chosenXAxis];
-        minY = minY < researchData[z][chosenYAxis] ? minY : researchData[z][chosenYAxis];
-        maxX = maxX > researchData[z][chosenXAxis] ? maxX : researchData[z][chosenXAxis];
-        maxY = maxY > researchData[z][chosenYAxis] ? maxY : researchData[z][chosenYAxis];
-      }
-      console.log(`minX ${minX} minY ${minY} maxX ${maxX} maxY ${maxY}`);
+    var { circlesGroup, textGroup } = createCircles(researchData, xLinearScale, yLinearScale);
 
     //Create group for x- axis labels
     var labelsGroupX = chartGroup.append("g")
@@ -329,50 +276,42 @@ d3.csv("/assets/data/data.csv").then(function(researchData, err) {
     //x axis labels event listener
     labelsGroupX.selectAll("text")
       .on("click", function() 
+    {
+      // get value of selection
+      var value = d3.select(this).attr("value");
+      if (value !== chosenXAxis) {
+
+      // replaces chosenXAxis with value
+      chosenXAxis = value;
+
+      // functions here found above csv import
+      // updates x scale for new data
+      xLinearScale = xScale(researchData, chosenXAxis);
+
+      // updates x axis with transition
+      xAxis = renderAxesX(xLinearScale, xAxis);
+
+      // updates circles with new x values
+      circlesGroup = renderCircles(circlesGroup, textGroup, xLinearScale, yLinearScale, chosenXAxis, chosenYAxis);
+
+      // updates tooltips with new info
+      circlesGroup = updateToolTip(chosenXAxis, chosenYAxis, circlesGroup, textGroup);
+
+      // changes classes to change bold text
+      labelsGroupX = updateXLabels(xLabels, chosenXAxis);
+    }
+  });
+
+  //x axis labels event listener
+  labelsGroupY.selectAll("text")
+    .on("click", function() 
+    {
+      // get value of selection
+      var value = d3.select(this).attr("value");
+      if (value !== chosenYAxis) 
       {
-        // get value of selection
-        var value = d3.select(this).attr("value");
-        if (value !== chosenXAxis) {
-
-        // replaces chosenXAxis with value
-        chosenXAxis = value;
-
-        // console.log(chosenXAxis)
-
-        // functions here found above csv import
-        // updates x scale for new data
-        xLinearScale = xScale(researchData, chosenXAxis);
-
-        // updates x axis with transition
-        xAxis = renderAxesX(xLinearScale, xAxis);
-
-        // updates circles with new x values
-        circlesGroup = renderCircles(circlesGroup, textGroup, xLinearScale, yLinearScale, chosenXAxis, chosenYAxis);
-
-
-        // updates tooltips with new info
-        circlesGroup = updateToolTip(chosenXAxis, chosenYAxis, circlesGroup);
-
-        // changes classes to change bold text
-        labelsGroupX = updateXLabels(xLabels, chosenXAxis);
-      }
-    });
-
-    //x axis labels event listener
-    labelsGroupY.selectAll("text")
-      .on("click", function() 
-      {
-        // get value of selection
-        console.log("Clicked on Y");
-        var value = d3.select(this).attr("value");
-        console.log(`Clicked on ${value}`);
-        console.log(`chosenYAxis = ${chosenYAxis}`);
-        if (value !== chosenYAxis) {
-
         // replaces chosenXAxis with value
         chosenYAxis = value;
-
-        // console.log(chosenYAxis)
 
         // functions here found above csv import
         // updates y scale for new data
@@ -385,7 +324,7 @@ d3.csv("/assets/data/data.csv").then(function(researchData, err) {
         circlesGroup = renderCircles(circlesGroup, textGroup, xLinearScale, yLinearScale, chosenXAxis, chosenYAxis);
 
         // updates tooltips with new info
-        circlesGroup = updateToolTip(chosenXAxis, chosenYAxis, circlesGroup);
+        circlesGroup = updateToolTip(chosenXAxis, chosenYAxis, circlesGroup, textGroup);
 
         // changes classes to change bold text
         labelsGroupY = updateYLabels(yLabels, chosenYAxis);
@@ -394,4 +333,49 @@ d3.csv("/assets/data/data.csv").then(function(researchData, err) {
   }).catch(function(error) {
   console.log(error);
 });
+
+// Create circles
+function createCircles(researchData, xLinearScale, yLinearScale) {
+  var circlesGroup = chartGroup.selectAll("circle")
+    .data(researchData)
+    .enter()
+    .append("circle")
+    .attr("cx", d => xLinearScale(d[chosenXAxis]))
+    .attr("cy", d => yLinearScale(d[chosenYAxis]))
+    .attr("r", 10)
+    .classed("stateCircle", true);
+  var textGroup = chartGroup.selectAll("p")
+    .data(researchData)
+    .enter()
+    .append("text")
+    .text(d => d.abbr)
+    .attr("x", d => xLinearScale(d[chosenXAxis]))
+    .attr("y", d => yLinearScale(d[chosenYAxis]) + 2.5)
+    .classed("stateText", true);
+  return { circlesGroup, textGroup };
+}
+
+// Parse the csv file and cast to numeric as needed
+function parseAndCastCSV(researchData) {
+  researchData.forEach(function (data) {
+    data.abbr = data.abbr;
+    data.id = +data.id;
+    data.state = data.state;
+    data.poverty = +data.poverty;
+    data.povertyMoe = +data.povertyMoe;
+    data.age = +data.age;
+    data.ageMoe = +data.ageMoe;
+    data.income = +data.income;
+    data.incomeMoe = +data.incomeMoe;
+    data.healthcare = +data.healthcare;
+    data.healthcareLow = +data.healthcareLow;
+    data.healthcareHigh = +data.healthcareHigh;
+    data.obesity = +data.obesity;
+    data.obesityLow = +data.obesityLow;
+    data.obesityHigh = +data.obesityHigh;
+    data.smokes = +data.smokes;
+    data.smokesLow = +data.smokesLow;
+    data.smokesHigh = +data.smokesHigh;
+  });
+}
   
