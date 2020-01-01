@@ -107,7 +107,7 @@ function renderCircles(circlesGroup, textGroup, newXScale, newYScale, chosenXAxi
 }
 
  // function used for updating circles group with new tooltip
-function updateToolTip(chosenXAxis, chosenYAxis, circlesGroup) 
+function updateToolTip(chosenXAxis, chosenYAxis, circlesGroup, textGroup) 
 {
     var toolTip = d3.tip()
       .attr("class", "d3-tip")
@@ -117,8 +117,17 @@ function updateToolTip(chosenXAxis, chosenYAxis, circlesGroup)
       });
   
     circlesGroup.call(toolTip);
+    textGroup.call(toolTip);
   
     circlesGroup.on("mouseover", function(data) {
+      toolTip.show(data);
+    })
+    // onmouseout event
+    .on("mouseout", function(data, index) {
+      toolTip.hide(data);
+    });
+
+    textGroup.on("mouseover", function(data) {
       toolTip.show(data);
     })
     // onmouseout event
@@ -140,13 +149,10 @@ function createXAxisLabels(labels, names)
   {
     console.log(name);
     xLabels[i] = labels.append("text")
-    // .attr("x", x)
     .attr("y", y)
     .attr("text-anchor", "middle")
     .attr("value", name) // value to grab for event listener
-    .classed("axis-text", true)
-    .classed(name === chosenXAxis ? "active" : "incactive", true)
-    .classed(name === chosenXAxis ? "inactive" : "active", false)
+    .classed(name === chosenXAxis ? "active" : "inactive", true)
     .text(xAxisText[i]);
     y += 20;
     i += 1;
@@ -172,9 +178,7 @@ function createYAxisLabels(labels, names)
     .attr("x", 0 - (height / 2))
     .attr("text-anchor", "middle")
     .attr("dy", "1em")
-    .classed("axis-text", true)
-    .classed(name === chosenYAxis ? "active" : "incactive", true)
-    .classed(name === chosenYAxis ? "inactive" : "active", false)
+    .classed(name === chosenYAxis ? "active" : "inactive", true)
     .attr("value",name)
     .text(yAxisText[i]);
 
@@ -320,7 +324,7 @@ d3.csv("/assets/data/data.csv").then(function(researchData, err) {
     labelsGroupY = createYAxisLabels(labelsGroupY, yNames);
     
     // updateToolTip function above csv import
-    var circlesGroup = updateToolTip(chosenXAxis, chosenYAxis, circlesGroup);
+    var circlesGroup = updateToolTip(chosenXAxis, chosenYAxis, circlesGroup, textGroup);
   
     //x axis labels event listener
     labelsGroupX.selectAll("text")
