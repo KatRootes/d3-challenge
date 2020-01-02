@@ -106,6 +106,21 @@ function renderCircles(circlesGroup, textGroup, newXScale, newYScale, chosenXAxi
   return circlesGroup;
 }
 
+// new line
+function renderLine(lineGroup, researchData, newXScale, newYScale) 
+{
+    var testData = linearRegression(researchData);
+
+    var lineFunction = d3.line()
+      .x(function (d) { return newXScale(d.x); })
+      .y(function (d) { return newYScale(d.y); });
+    lineGroup.transition()
+      .duration(1000)
+      .attr("d", lineFunction(testData));
+
+  return lineGroup;
+}
+
  // function used for updating circles group with new tooltip
 function updateToolTip(chosenXAxis, chosenYAxis, circlesGroup, textGroup) 
 {
@@ -272,7 +287,7 @@ d3.csv("/assets/data/data.csv").then(function(researchData, err) {
     var circlesGroup = updateToolTip(chosenXAxis, chosenYAxis, circlesGroup, textGroup);
 
     // testing
-    renderLinearRegression(researchData, xLinearScale, yLinearScale);
+    lineGroup = renderLinearRegression(researchData, xLinearScale, yLinearScale);
 
     //x axis labels event listener
     labelsGroupX.selectAll("text")
@@ -301,7 +316,7 @@ d3.csv("/assets/data/data.csv").then(function(researchData, err) {
       // changes classes to change bold text
       labelsGroupX = updateXLabels(xLabels, chosenXAxis);
 
-      renderLinearRegression(researchData, xLinearScale, yLinearScale);
+      lineGroup = renderLine(lineGroup, researchData, xLinearScale, yLinearScale);
     }
   });
 
@@ -331,6 +346,8 @@ d3.csv("/assets/data/data.csv").then(function(researchData, err) {
 
         // changes classes to change bold text
         labelsGroupY = updateYLabels(yLabels, chosenYAxis);
+
+        lineGroup = renderLine(lineGroup, researchData, xLinearScale, yLinearScale);
       }
     });
   }).catch(function(error) {
@@ -338,35 +355,49 @@ d3.csv("/assets/data/data.csv").then(function(researchData, err) {
 });
 
 function renderLinearRegression(researchData, xLinearScale, yLinearScale) {
-  let xAvg = 0., yAvg = 0., xDeltaSquare = 0., xyDelta = 0.;
-  for (let l = 0; l < researchData.length; l++) {
+  var testData = linearRegression(researchData);
+  var lineFunction = d3.line()
+    .x(function (d) { return xLinearScale(d.x); })
+    .y(function (d) { return yLinearScale(d.y); });
+  var lineGroup = chartGroup.append("path")
+    .attr("d", lineFunction(testData))
+    .attr("stroke", "gray")
+    .attr("stroke-width", 2)
+    .attr("fill", "none");
+
+  return lineGroup;
+}
+
+function linearRegression(researchData) {
+  let xAvg = 0., yAvg = 0., xDeltaSquare = 0., yDeltaSquare = 0., xyDelta = 0., N = researchData.length;
+  for (let l = 0; l < N; l++) {
     xAvg += researchData[l][chosenXAxis];
     yAvg += researchData[l][chosenYAxis];
   }
-  xAvg /= researchData.length;
-  yAvg /= researchData.length;
-  for (let k = 0; k < researchData.length; k++) {
+  xAvg /= N;
+  yAvg /= N;
+  for (let k = 0; k < N; k++) {
     xDeltaSquare += ((researchData[k][chosenXAxis] - xAvg) * (researchData[k][chosenXAxis] - xAvg));
+    yDeltaSquare += ((researchData[k][chosenYAxis] - yAvg) * (researchData[k][chosenYAxis] - yAvg));
     xyDelta += ((researchData[k][chosenXAxis] - xAvg) * (researchData[k][chosenYAxis] - yAvg));
   }
   let b1 = xyDelta / xDeltaSquare;
   let b0 = yAvg - (b1 * xAvg);
   var testData = [{
-  x: d3.min(researchData, d => d[chosenXAxis]),
+    x: d3.min(researchData, d => d[chosenXAxis]),
     y: (b1 * d3.min(researchData, d => d[chosenXAxis]) + b0)
   },
   {
-  x: d3.max(researchData, d => d[chosenXAxis]),
+    x: d3.max(researchData, d => d[chosenXAxis]),
     y: (b1 * d3.max(researchData, d => d[chosenXAxis]) + b0)
   }];
-  var lineFunction = d3.line()
-    .x(function (d) { return xLinearScale(d.x); })
-    .y(function (d) { return yLinearScale(d.y); });
-  var pathGroup = chartGroup.append("path")
-    .attr("d", lineFunction(testData))
-    .attr("stroke", "gray")
-    .attr("stroke-width", 2)
-    .attr("fill", "none");
+
+  let sigmaX = 0.0, sigmaY = 0.0, rSquare = 0.;
+  sigmaX = Math.sqrt(xDeltaSquare / N);
+  sigmaY = Math.sqrt(yDeltaSquare / N);
+  rSquare = ((1 / N) * xyDelta / (sigmaX * sigmaY)) * ((1 / N) * xyDelta / (sigmaX * sigmaY));
+
+  return testData;
 }
 
 // Create circles
