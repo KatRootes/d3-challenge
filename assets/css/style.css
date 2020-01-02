@@ -33,3 +33,11 @@ body {
 .table-font {
   font: 12px sans-serif;
 }
+
+.highlight {
+  background-color: whitesmoke;
+}
+
+.normal {
+  background-color: white;
+}

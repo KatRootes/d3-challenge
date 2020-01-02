@@ -42,8 +42,8 @@ function xScale(researchData, chosenXAxis)
 {
     // create scales
     var xLinearScale = d3.scaleLinear()
-      .domain([d3.min(researchData, d => d[chosenXAxis]) * 0.8,
-        d3.max(researchData, d => d[chosenXAxis]) * 1.2
+      .domain([d3.min(researchData, d => d[chosenXAxis]) * 0.9,
+        d3.max(researchData, d => d[chosenXAxis]) * 1.1
       ])
       .range([0, width]);
   
@@ -55,8 +55,8 @@ function yScale(researchData, chosenYAxis)
 {
     // create scales
     var yLinearScale = d3.scaleLinear()
-      .domain([d3.min(researchData, d => d[chosenYAxis]) * 0.8,
-        d3.max(researchData, d => d[chosenYAxis]) * 1.2
+      .domain([d3.min(researchData, d => d[chosenYAxis]) * 0.9,
+        d3.max(researchData, d => d[chosenYAxis]) * 1.1
       ])
       .range([height, 0]);
   
@@ -106,7 +106,7 @@ function renderCircles(circlesGroup, textGroup, newXScale, newYScale, chosenXAxi
   return circlesGroup;
 }
 
-// new line
+// regression line
 function renderLine(lineGroup, researchData, newXScale, newYScale) 
 {
     var testData = linearRegression(researchData);
@@ -117,6 +117,10 @@ function renderLine(lineGroup, researchData, newXScale, newYScale)
     lineGroup.transition()
       .duration(1000)
       .attr("d", lineFunction(testData));
+
+    // highlight row in table
+    d3.selectAll("tr").classed("normal", true).classed("highlight", false);
+    d3.select(`#${chosenXAxis}-${chosenYAxis}`).classed("highlight", true).classed("normal",false);
 
   return lineGroup;
 }
@@ -170,6 +174,7 @@ function updateToolTip(chosenXAxis, chosenYAxis, circlesGroup, textGroup)
   return circlesGroup;
 }
 
+// function for creating x axis labels
 function createXAxisLabels(labels, names)
 {
   let x = 0;
@@ -190,6 +195,7 @@ function createXAxisLabels(labels, names)
   return labels;
 }
 
+// function for creating y axis labels
 function createYAxisLabels(labels, names)
 {
   let x = 0;
@@ -347,6 +353,7 @@ d3.csv("/assets/data/data.csv").then(function(researchData, err) {
         // changes classes to change bold text
         labelsGroupY = updateYLabels(yLabels, chosenYAxis);
 
+        // render the regression line
         lineGroup = renderLine(lineGroup, researchData, xLinearScale, yLinearScale);
       }
     });
@@ -354,6 +361,7 @@ d3.csv("/assets/data/data.csv").then(function(researchData, err) {
   console.log(error);
 });
 
+// create and render the regression line
 function renderLinearRegression(researchData, xLinearScale, yLinearScale) {
   var testData = linearRegression(researchData);
   var lineFunction = d3.line()
@@ -365,9 +373,14 @@ function renderLinearRegression(researchData, xLinearScale, yLinearScale) {
     .attr("stroke-width", 2)
     .attr("fill", "none");
 
+  // highlight the current table row
+  d3.selectAll("tr").classed("normal", true).classed("highlight", false);
+  d3.select(`#${chosenXAxis}-${chosenYAxis}`).classed("highlight", true).classed("normal",false);
+
   return lineGroup;
 }
 
+// calculate the regression
 function linearRegression(researchData) {
   let xAvg = 0., yAvg = 0., xDeltaSquare = 0., yDeltaSquare = 0., xyDelta = 0., N = researchData.length;
   for (let l = 0; l < N; l++) {
