@@ -247,7 +247,7 @@ function updateYLabels(group, chosenYAxis)
 }
 
 // Retrieve data from the CSV file and execute everything below
-d3.csv("/assets/data/data.csv").then(function(researchData, err) {
+d3.csv("data.csv").then(function(researchData, err) {
     if (err) throw err;
   
     // parse data and convert some fields to numeric
