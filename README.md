@@ -12,5 +12,5 @@ https://katrootes.github.io/d3-challenge/
 
 # Sample Screen Shots
 Below is a sample screen shot showing Household Income (Median) vs Smokes (%) having an R-Square value of 44%.  Also 
-![Screenshot](https://github.com/KatRootes/d3-challenge/blob/master/Capture.PNG)
+![Screenshot](https://github.com/KatRootes/d3-challenge/Capture.PNG)
 
